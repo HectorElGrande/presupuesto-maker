@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="174.55 107.484 146.458 231.29">
+  <rect x="101.209" y="61.716" width="141.054" height="226.279" style="fill: rgb(254, 254, 254); stroke-linecap: round; stroke-width: 2px; stroke: rgb(44, 42, 44); transform-origin: 171.293px 174.679px 0px;" transform="matrix(0.999985, 0.005404, -0.005404, 0.999985, 75.765948, 48.43773)" rx="4.174" ry="4.174"/>
+  <rect x="99.419" y="58.525" width="140.57" height="19.345" style="stroke-width: 0px; stroke-linejoin: round; stroke-linecap: round; paint-order: fill; stroke-dashoffset: 361.51px; stroke: rgb(62, 57, 88); fill: rgb(44, 42, 44); transform-origin: 169.748px 166.597px 0px;" transform="matrix(0.999985, 0.005404, -0.005404, 0.999985, 77.492065, 51.750753)" rx="4.167" ry="4.167"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 191.936 148.68 L 302.111 148.68"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 191.737 166.123 L 255.276 166.123"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 191.492 195.942 L 255.031 195.942"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 191.859 226.556 L 255.398 226.556"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 258.615 274.516 L 301.279 274.516"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 258.767 296.466 L 301.431 296.466"/>
+  <path style="fill: rgb(216, 216, 216); stroke-width: 2px; stroke: rgb(44, 42, 44);" d="M 258.922 318.466 L 301.586 318.466"/>
+</svg>
