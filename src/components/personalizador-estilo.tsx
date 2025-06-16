@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { SubidaLogo } from "@/components/subida-logo";
 import {
   Dialog,
@@ -17,6 +17,7 @@ const estilos = [
   { id: "pantone", nombre: "Pantone", preview: "/estilos/pantone.svg" },
   { id: "clasico", nombre: "Clásico", preview: "/estilos/clasic.svg" },
   { id: "minimal", nombre: "Minimal", preview: "/estilos/minimal.svg" },
+  { id: "clasico1", nombre: "Clásico", preview: "/estilos/clasic.svg" },
 ];
 
 const tamanosLogo = ["S", "M", "L", "XL"];
@@ -26,39 +27,55 @@ export function PersonalizadorEstilo({
   setEstilo,
   formData,
   setFormData,
+  estiloOriginal,
+  setEstiloOriginal,
 }: {
   estiloActual: string;
   setEstilo: (estilo: string) => void;
   formData: any;
   setFormData: (formData: any) => void;
+  estiloOriginal: string;
+  setEstiloOriginal: (estilo: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-
-  // Estado local solo dentro del modal
   const [estiloSeleccionado, setEstiloSeleccionado] = useState(estiloActual);
-  const [mostrarLogo, setMostrarLogo] = useState(true);
-  const [tamanoLogo, setTamanoLogo] = useState("S");
-  const [logoTemporal, setLogoTemporal] = useState("");
+  const [mostrarLogo, setMostrarLogo] = useState(formData.mostrarLogo ?? true);
+  const [tamanoLogo, setTamanoLogo] = useState(formData.tamanoLogo ?? "S");
+  const [logoTemporal, setLogoTemporal] = useState(formData.logo ?? "");
+  const [guardado, setGuardado] = useState(false);
 
-  // Copia del estado original para restaurar si se cancela
   useEffect(() => {
     if (open) {
+      // Al abrir el modal: guardar estado original y resetear bandera de guardado
+      setEstiloOriginal(formData.estilo);
       setEstiloSeleccionado(formData.estilo);
       setMostrarLogo(formData.mostrarLogo ?? true);
       setTamanoLogo(formData.tamanoLogo ?? "S");
       setLogoTemporal(formData.logo ?? "");
+      setGuardado(false);
+    } else if (!guardado) {
+      // Al cerrar sin guardar: revertir
+      setFormData((prev: any) => ({ ...prev, estilo: estiloOriginal }));
+      setEstilo(estiloOriginal);
     }
   }, [open]);
 
+  const handleSeleccionEstilo = (nuevoEstilo: string) => {
+    setEstiloSeleccionado(nuevoEstilo);
+    setFormData((prev: any) => ({ ...prev, estilo: nuevoEstilo }));
+    setEstilo(nuevoEstilo);
+  };
+
   const handleGuardar = () => {
-    setEstilo(estiloSeleccionado);
-    setFormData({
-      ...formData,
+    setFormData((prev: any) => ({
+      ...prev,
       estilo: estiloSeleccionado,
       mostrarLogo,
       tamanoLogo,
       logo: logoTemporal,
-    });
+    }));
+    setEstilo(estiloSeleccionado);
+    setGuardado(true);
     setOpen(false);
   };
 
@@ -73,15 +90,16 @@ export function PersonalizadorEstilo({
           Personalizar estilo
         </DialogTitle>
 
-        {/* Selección de estilo */}
+        {/* Estilos */}
         <div className="grid grid-cols-5 gap-4 mb-8">
           {estilos.map((estilo) => (
             <button
               key={estilo.id}
-              onClick={() => setEstiloSeleccionado(estilo.id)}
+              onClick={() => handleSeleccionEstilo(estilo.id)}
               className={cn(
                 "rounded border hover:border-primary p-2 transition-all",
-                estiloSeleccionado === estilo.id && "border-2 border-primary shadow-sm"
+                estiloSeleccionado === estilo.id &&
+                  "border-2 border-primary shadow-sm"
               )}
             >
               <img
@@ -94,7 +112,7 @@ export function PersonalizadorEstilo({
           ))}
         </div>
 
-        {/* Subida de logo */}
+        {/* Subida logo */}
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium mb-1">Logotipo</p>
@@ -121,7 +139,7 @@ export function PersonalizadorEstilo({
               {mostrarLogo ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
             </Button>
 
-            {/* Tamaños */}
+            {/* Tamaño */}
             <div className="flex gap-2">
               {tamanosLogo.map((size) => (
                 <Button
@@ -137,7 +155,7 @@ export function PersonalizadorEstilo({
           </div>
         </div>
 
-        {/* Botón Guardar */}
+        {/* Guardar */}
         <div className="text-right mt-6">
           <Button onClick={handleGuardar} className="shadow-md px-6">
             Guardar
