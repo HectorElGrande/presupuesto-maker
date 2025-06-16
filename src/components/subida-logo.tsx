@@ -18,7 +18,7 @@ export function SubidaLogo({ setLogo }: { setLogo: (logo: string) => void }) {
 
   return (
     <div className="space-y-1">
-      <Input type="file" accept="image/*" onChange={handleChange} />
+      <Input className="cursor-pointer" type="file" accept="image/*" onChange={handleChange} />
     </div>
   );
 }

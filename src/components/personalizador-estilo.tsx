@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Upload, Eye, EyeOff } from "lucide-react";
+import { Upload, Eye, EyeOff, Brush, Download } from "lucide-react";
 
 const estilos = [
   { id: "moderno", nombre: "Moderno", preview: "/estilos/modern.svg" },
@@ -82,7 +82,9 @@ export function PersonalizadorEstilo({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="shadow">🎨 Personalizar estilo</Button>
+        <Button className="shadow cursor-pointer">
+           <Brush className="w-6 h-6" />Personalizar estilo
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="max-w-3xl p-6">
@@ -97,7 +99,7 @@ export function PersonalizadorEstilo({
               key={estilo.id}
               onClick={() => handleSeleccionEstilo(estilo.id)}
               className={cn(
-                "rounded border hover:border-primary p-2 transition-all",
+                "rounded border hover:border-primary p-2 transition-all cursor-pointer",
                 estiloSeleccionado === estilo.id &&
                   "border-2 border-primary shadow-sm"
               )}
@@ -131,6 +133,7 @@ export function PersonalizadorEstilo({
           <div className="flex items-center justify-between mt-4">
             {/* Visibilidad */}
             <Button
+              className="cursor-pointer"
               variant="ghost"
               size="icon"
               onClick={() => setMostrarLogo(!mostrarLogo)}
@@ -143,6 +146,7 @@ export function PersonalizadorEstilo({
             <div className="flex gap-2">
               {tamanosLogo.map((size) => (
                 <Button
+                  className="cursor-pointer"
                   key={size}
                   variant={size === tamanoLogo ? "default" : "outline"}
                   size="sm"
@@ -157,7 +161,7 @@ export function PersonalizadorEstilo({
 
         {/* Guardar */}
         <div className="text-right mt-6">
-          <Button onClick={handleGuardar} className="shadow-md px-6">
+          <Button onClick={handleGuardar} className="shadow-md px-6 cursor-pointer">
             Guardar
           </Button>
         </div>

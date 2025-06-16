@@ -66,7 +66,7 @@ export default function TablaConceptos({ formData, setFormData }: any) {
       ...formData,
       conceptos: [
         ...formData.conceptos,
-        { descripcion: "", cantidad: 1, precio: 0 },
+        { descripcion: "", cantidad: 0, precio: 0 },
       ],
     });
   };
@@ -83,62 +83,65 @@ export default function TablaConceptos({ formData, setFormData }: any) {
   return (
     <>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd} sensors={sensors}>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10"></TableHead>
-              <TableHead>Concepto</TableHead>
-              <TableHead>Precio</TableHead>
-              <TableHead>Unidades</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead className="w-10"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <SortableContext
-            items={formData.conceptos.map((_: any, i: number) => i.toString())}
-            strategy={verticalListSortingStrategy}
-          >
-            <TableBody>
-              {formData.conceptos.map((concepto: any, i: number) => (
-                <SortableRow key={i} id={i.toString()}>
-                  <TableCell>
-                    <Input
-                      className="h-8"
-                      value={concepto.descripcion}
-                      onChange={(e) => updateConcepto(i, "descripcion", e.target.value)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      className="h-8"
-                      value={concepto.precio.toString()}
-                      onChange={(e) => updateConcepto(i, "precio", e.target.value)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      className="h-8"
-                      value={concepto.cantidad.toString()}
-                      onChange={(e) => updateConcepto(i, "cantidad", e.target.value)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right pr-2">
-                    {(concepto.precio * concepto.cantidad).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => removeConcepto(i)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </SortableRow>
-              ))}
-            </TableBody>
-          </SortableContext>
-        </Table>
+        <div className={formData.conceptos.length > 4 ? "max-h-70 overflow-y-auto" : ""}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10"></TableHead>
+                <TableHead>Concepto</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Unidades</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <SortableContext
+              items={formData.conceptos.map((_: any, i: number) => i.toString())}
+              strategy={verticalListSortingStrategy}
+            >
+              <TableBody>
+                {formData.conceptos.map((concepto: any, i: number) => (
+                  <SortableRow key={i} id={i.toString()}>
+                    <TableCell>
+                      <Input
+                        placeholder="Descripción"
+                        className="h-8"
+                        value={concepto.descripcion}
+                        onChange={(e) => updateConcepto(i, "descripcion", e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        className="h-8"
+                        value={concepto.precio.toString()}
+                        onChange={(e) => updateConcepto(i, "precio", e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        className="h-8"
+                        value={concepto.cantidad.toString()}
+                        onChange={(e) => updateConcepto(i, "cantidad", e.target.value)}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right pr-2">
+                      {(concepto.precio * concepto.cantidad).toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <Button className="cursor-pointer" size="icon" variant="ghost" onClick={() => removeConcepto(i)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </SortableRow>
+                ))}
+              </TableBody>
+            </SortableContext>
+          </Table>
+        </div>
       </DndContext>
-      
+
       <Button variant="link" size="sm" onClick={addConcepto} className="mt-2 cursor-pointer">
         + Añadir
       </Button>

@@ -19,6 +19,12 @@ export function VistaMinimal({ formData }: any) {
         <p className="text-sm">{formData.nombreCliente}</p>
       </div>
 
+      {/* Fecha */}
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-gray-600 uppercase mb-1">Fecha</h3>
+        <p className="text-sm">{formData.fechaEmision}</p>
+      </div>
+
       {/* Conceptos */}
       <div className="mb-6">
         <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Detalle del presupuesto</h3>

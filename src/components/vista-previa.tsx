@@ -4,12 +4,14 @@
 import { VistaPantone } from "@/components/estilos-html/pantone";
 import { VistaMinimal } from "@/components/estilos-html/minimal";
 import { EstiloModernoHTML } from "@/components/estilos-html/moderno";
+import { VistaClasica } from "@/components/estilos-html/clasico";
 import React, { useState } from "react";
 import { PersonalizadorEstilo } from "./personalizador-estilo";
 import { Button } from "./ui/button";
 import { PresupuestoPDF } from "./pdf-generated";
 import { saveAs } from "file-saver";
 import { pdf } from "@react-pdf/renderer";
+import { Download } from "lucide-react";
 
 
 export function VistaPrevia({ formData, setFormData }: any) {
@@ -18,6 +20,7 @@ export function VistaPrevia({ formData, setFormData }: any) {
     moderno: EstiloModernoHTML,
     pantone: VistaPantone,
     minimal: VistaMinimal,
+    clasico: VistaClasica,
   }[formData.estilo] || EstiloModernoHTML;
 
   const handleDownload = async () => {
@@ -25,7 +28,6 @@ export function VistaPrevia({ formData, setFormData }: any) {
       <PresupuestoPDF
         formData={formData}
         estilo={formData.estilo}
-        logo={formData.logo}
       />
     ).toBlob();
     saveAs(blob, "presupuesto.pdf");
@@ -33,8 +35,9 @@ export function VistaPrevia({ formData, setFormData }: any) {
 
   return (
     <div className="mx-auto">
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <Button onClick={handleDownload}>Descargar PDF</Button>
+      {React.createElement(componenteVista, { formData, setFormData })}
+      <div className="flex justify-between items-center mt-6 flex-wrap gap-4">
+        <Button className="cursor-pointer" onClick={handleDownload}><Download className="w-6 h-6" />Descargar PDF</Button>
 
         <PersonalizadorEstilo
           estiloActual={formData.estilo}
@@ -47,7 +50,6 @@ export function VistaPrevia({ formData, setFormData }: any) {
           setEstiloOriginal={setEstiloOriginal}
         />
       </div>
-      {React.createElement(componenteVista, { formData, setFormData })}
     </div>
   );
 

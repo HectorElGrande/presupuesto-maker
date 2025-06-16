@@ -14,7 +14,7 @@ export function VistaPantone({ formData }: any) {
       <div className="bg-purple-700 text-white px-6 py-4">
         <h1 className="text-xl font-bold">Presupuesto</h1>
         <p className="text-sm opacity-90">
-          {formData.fecha || new Date().toLocaleDateString()}
+          {formData.fechaEmision || new Date().toLocaleDateString()}
         </p>
       </div>
 
