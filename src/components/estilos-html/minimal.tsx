@@ -1,4 +1,4 @@
-export function VistaMinimal({ formData, setFormData }: any) {
+export function VistaMinimal({ formData }: any) {
   return (
     <div className="bg-white text-black p-6 rounded-md shadow-sm border mx-auto">
       <div className="flex justify-between items-center mb-4">

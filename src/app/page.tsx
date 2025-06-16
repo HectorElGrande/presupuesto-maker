@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { FormularioPresupuesto } from '@/components/formulario-presupuesto';
 import { VistaPrevia } from "@/components/vista-previa";
-import { GripVertical } from "lucide-react";
 import {
   Panel,
   PanelGroup,

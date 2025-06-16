@@ -7,7 +7,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
 
 export function PantonePDF({ formData }: { formData: any }) {

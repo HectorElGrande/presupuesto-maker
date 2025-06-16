@@ -6,8 +6,7 @@ import {
   Page,
   Text,
   View,
-  StyleSheet,
-  Image,
+  StyleSheet
 } from "@react-pdf/renderer";
 
 export function EstiloModernoPDF({ formData }: { formData: any }) {
