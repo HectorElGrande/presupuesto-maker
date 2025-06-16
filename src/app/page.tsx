@@ -25,7 +25,7 @@ export default function Home() {
   });
 
   return (
-    <main className="min-h-screen bg-muted text-foreground p-6">
+    <main className="min-h-screen bg-muted text-foreground p-20">
       <PanelGroup direction="horizontal">
         <Panel defaultSize={30} minSize={20}>
           <div className="w-full">

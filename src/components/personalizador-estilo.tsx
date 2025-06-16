@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SubidaLogo } from "@/components/subida-logo";
 import {
   Dialog,
@@ -17,7 +17,6 @@ const estilos = [
   { id: "pantone", nombre: "Pantone", preview: "/estilos/pantone.svg" },
   { id: "clasico", nombre: "Clásico", preview: "/estilos/clasic.svg" },
   { id: "minimal", nombre: "Minimal", preview: "/estilos/minimal.svg" },
-  { id: "minimal", nombre: "Minimal", preview: "/estilos/minimal.svg" },
 ];
 
 const tamanosLogo = ["S", "M", "L", "XL"];
@@ -25,15 +24,42 @@ const tamanosLogo = ["S", "M", "L", "XL"];
 export function PersonalizadorEstilo({
   estiloActual,
   setEstilo,
+  formData,
+  setFormData,
 }: {
   estiloActual: string;
   setEstilo: (estilo: string) => void;
+  formData: any;
+  setFormData: (formData: any) => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  // Estado local solo dentro del modal
+  const [estiloSeleccionado, setEstiloSeleccionado] = useState(estiloActual);
   const [mostrarLogo, setMostrarLogo] = useState(true);
   const [tamanoLogo, setTamanoLogo] = useState("S");
-  const handleChange = (field: string, value: any) => {
-    setFormData({ ...formData, [field]: value });
+  const [logoTemporal, setLogoTemporal] = useState("");
+
+  // Copia del estado original para restaurar si se cancela
+  useEffect(() => {
+    if (open) {
+      setEstiloSeleccionado(formData.estilo);
+      setMostrarLogo(formData.mostrarLogo ?? true);
+      setTamanoLogo(formData.tamanoLogo ?? "S");
+      setLogoTemporal(formData.logo ?? "");
+    }
+  }, [open]);
+
+  const handleGuardar = () => {
+    setEstilo(estiloSeleccionado);
+    setFormData({
+      ...formData,
+      estilo: estiloSeleccionado,
+      mostrarLogo,
+      tamanoLogo,
+      logo: logoTemporal,
+    });
+    setOpen(false);
   };
 
   return (
@@ -47,30 +73,35 @@ export function PersonalizadorEstilo({
           Personalizar estilo
         </DialogTitle>
 
+        {/* Selección de estilo */}
         <div className="grid grid-cols-5 gap-4 mb-8">
           {estilos.map((estilo) => (
             <button
               key={estilo.id}
-              onClick={() => setEstilo(estilo.id)}
+              onClick={() => setEstiloSeleccionado(estilo.id)}
               className={cn(
                 "rounded border hover:border-primary p-2 transition-all",
-                estiloActual === estilo.id && "border-2 border-primary shadow-sm"
+                estiloSeleccionado === estilo.id && "border-2 border-primary shadow-sm"
               )}
             >
-              <img src={estilo.preview} alt={estilo.nombre} className="mb-2 rounded" />
+              <img
+                src={estilo.preview}
+                alt={estilo.nombre}
+                className="mb-2 rounded"
+              />
               <p className="text-sm text-center">{estilo.nombre}</p>
             </button>
           ))}
         </div>
 
+        {/* Subida de logo */}
         <div className="space-y-4">
-          {/* Subida de logo */}
           <div>
             <p className="text-sm font-medium mb-1">Logotipo</p>
             <div className="border-dashed border border-muted rounded px-4 py-3 text-sm text-muted-foreground flex items-center justify-between">
-              <SubidaLogo setLogo={(logo) =>
-                          setFormData((prev: any) => ({ ...prev, logo }))
-                        } />
+              <SubidaLogo
+                setLogo={(logo) => setLogoTemporal(logo)}
+              />
               <Upload className="w-4 h-4 opacity-50" />
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -108,7 +139,7 @@ export function PersonalizadorEstilo({
 
         {/* Botón Guardar */}
         <div className="text-right mt-6">
-          <Button onClick={() => setOpen(false)} className="shadow-md px-6">
+          <Button onClick={handleGuardar} className="shadow-md px-6">
             Guardar
           </Button>
         </div>
