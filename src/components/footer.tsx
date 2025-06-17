@@ -1,131 +1,111 @@
-interface MenuItem {
-  title: string;
-  links: {
-    text: string;
-    url: string;
-  }[];
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  DribbbleIcon,
+  GithubIcon,
+  TwitchIcon,
+  TwitterIcon,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-interface FooterProps {
-  logo?: {
-    url: string;
-    src: string;
-    alt: string;
-    title: string;
-  };
-  tagline?: string;
-  menuItems?: MenuItem[];
-  copyright?: string;
-  bottomLinks?: {
-    text: string;
-    url: string;
-  }[];
-}
-
-const Footer = ({
-  logo = {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg",
-    alt: "blocks for shadcn/ui",
-    title: "Shadcnblocks.com",
-    url: "https://www.shadcnblocks.com",
+const footerLinks = [
+  {
+    title: "Features",
+    href: "#features",
   },
-  tagline = "Components made easy.",
-  menuItems = [
-    {
-      title: "Product",
-      links: [
-        { text: "Overview", url: "#" },
-        { text: "Pricing", url: "#" },
-        { text: "Marketplace", url: "#" },
-        { text: "Features", url: "#" },
-        { text: "Integrations", url: "#" },
-        { text: "Pricing", url: "#" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { text: "About", url: "#" },
-        { text: "Team", url: "#" },
-        { text: "Blog", url: "#" },
-        { text: "Careers", url: "#" },
-        { text: "Contact", url: "#" },
-        { text: "Privacy", url: "#" },
-      ],
-    },
-    {
-      title: "Resources",
-      links: [
-        { text: "Help", url: "#" },
-        { text: "Sales", url: "#" },
-        { text: "Advertise", url: "#" },
-      ],
-    },
-    {
-      title: "Social",
-      links: [
-        { text: "Twitter", url: "#" },
-        { text: "Instagram", url: "#" },
-        { text: "LinkedIn", url: "#" },
-      ],
-    },
-  ],
-  copyright = "© 2024 Shadcnblocks.com. All rights reserved.",
-  bottomLinks = [
-    { text: "Terms and Conditions", url: "#" },
-    { text: "Privacy Policy", url: "#" },
-  ],
-}: FooterProps) => {
+  {
+    title: "Pricing",
+    href: "#pricing",
+  },
+  {
+    title: "FAQ",
+    href: "#faq",
+  },
+  {
+    title: "Testimonials",
+    href: "#testimonials",
+  },
+  {
+    title: "Privacy",
+    href: "#privacy",
+  },
+];
+
+const logo = {
+        url: "/",
+        src: "/logo-dark.svg",
+        alt: "logo",
+        title: "QuoteFlow",
+    }
+
+const Footer = () => {
   return (
-    <section className="py-32">
-      <div className="mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8">
-        <footer>
-          <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
-            <div className="col-span-2 mb-8 lg:mb-0">
-              <div className="flex items-center gap-2 lg:justify-start">
-                <a href="https://shadcnblocks.com">
-                  <img
-                    src={logo.src}
-                    alt={logo.alt}
-                    title={logo.title}
-                    className="h-10"
-                  />
-                </a>
-                <p className="text-xl font-semibold">{logo.title}</p>
+    <footer className="mt-10">
+      <div className="max-w-screen-xl mx-auto">
+        <div className="py-12 flex flex-col sm:flex-row items-start justify-between gap-x-8 gap-y-10 px-6 xl:px-0">
+          <div>
+            {/* Logo */}
+            <a href={logo.url} className="flex items-center gap-2">
+              <div className="relative w-8 h-8">
+                <Image
+                  src="/logo-light.svg"
+                  alt="QuoteFlow Logo Claro"
+                  fill
+                  className="block dark:hidden object-contain"
+                />
+                <Image
+                  src="/logo-dark.svg"
+                  alt="QuoteFlow Logo Oscuro"
+                  fill
+                  className="hidden dark:block object-contain"
+                />
               </div>
-              <p className="mt-4 font-bold">{tagline}</p>
-            </div>
-            {menuItems.map((section, sectionIdx) => (
-              <div key={sectionIdx}>
-                <h3 className="mb-4 font-bold">{section.title}</h3>
-                <ul className="space-y-4 text-muted-foreground">
-                  {section.links.map((link, linkIdx) => (
-                    <li
-                      key={linkIdx}
-                      className="font-medium hover:text-primary"
-                    >
-                      <a href={link.url}>{link.text}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+              <span className="text-lg font-semibold tracking-tighter">
+                {logo.title}
+              </span>
+            </a>
           </div>
-          <div className="mt-24 flex flex-col justify-between gap-4 border-t pt-8 text-sm font-medium text-muted-foreground md:flex-row md:items-center">
-            <p>{copyright}</p>
-            <ul className="flex gap-4">
-              {bottomLinks.map((link, linkIdx) => (
-                <li key={linkIdx} className="underline hover:text-primary">
-                  <a href={link.url}>{link.text}</a>
-                </li>
-              ))}
-            </ul>
+
+          {/* Subscribe Newsletter */}
+          <div className="max-w-xs w-full">
+            <h6 className="font-semibold">Stay up to date</h6>
+            <form className="mt-6 flex items-center gap-2">
+              <Input type="email" placeholder="Enter your email" />
+              <Button>Subscribe</Button>
+            </form>
           </div>
-        </footer>
+        </div>
+        <Separator />
+        <div className="py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-x-2 gap-y-5 px-6 xl:px-0">
+          {/* Copyright */}
+          <span className="text-muted-foreground text-center sm:text-start">
+            &copy; {new Date().getFullYear()}{" "}
+            <Link href="/" target="_blank">
+              QuoteFlow
+            </Link>
+            . All rights reserved.
+          </span>
+
+          <div className="flex items-center gap-5 text-muted-foreground">
+            <Link href="#" target="_blank">
+              <TwitterIcon className="h-5 w-5" />
+            </Link>
+            <Link href="#" target="_blank">
+              <DribbbleIcon className="h-5 w-5" />
+            </Link>
+            <Link href="#" target="_blank">
+              <TwitchIcon className="h-5 w-5" />
+            </Link>
+            <Link href="#" target="_blank">
+              <GithubIcon className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
       </div>
-    </section>
+    </footer>
   );
 };
 
-export { Footer };
-
+export default Footer;

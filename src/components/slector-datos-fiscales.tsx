@@ -17,7 +17,7 @@ export function SelectorEntidad({ tipo, datos, setDatos }: SelectorEntidadProps)
   const tieneDatos = datos?.nombre?.trim();
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <Label>{tipo === "emisor" ? "Emisor" : "Cliente"}</Label>
 
       <div className="relative">

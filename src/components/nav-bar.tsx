@@ -1,5 +1,6 @@
 import { Book, Menu, Sunset, Trees, Zap } from "lucide-react";
 import { ModeToggle } from "@/components/theme-button";
+import Image from "next/image";
 import {
     Accordion,
     AccordionContent,
@@ -54,9 +55,9 @@ interface Navbar1Props {
 const Navbar1 = ({
     logo = {
         url: "https://www.shadcnblocks.com",
-        src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg",
+        src: "/logo-dark.svg",
         alt: "logo",
-        title: "Shadcnblocks.com",
+        title: "QuoteFlow",
     },
     menu = [
         { title: "Home", url: "#" },
@@ -143,7 +144,20 @@ const Navbar1 = ({
                     <div className="flex items-center gap-6">
                         {/* Logo */}
                         <a href={logo.url} className="flex items-center gap-2">
-                            <img src={logo.src} className="max-h-8" alt={logo.alt} />
+                            <div className="relative w-8 h-8">
+                                <Image
+                                    src="/logo-light.svg"
+                                    alt="QuoteFlow Logo Claro"
+                                    fill
+                                    className="block dark:hidden object-contain"
+                                />
+                                <Image
+                                    src="/logo-dark.svg"
+                                    alt="QuoteFlow Logo Oscuro"
+                                    fill
+                                    className="hidden dark:block object-contain"
+                                />
+                            </div>
                             <span className="text-lg font-semibold tracking-tighter">
                                 {logo.title}
                             </span>
@@ -156,13 +170,15 @@ const Navbar1 = ({
                             </NavigationMenu>
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Button asChild variant="outline" size="sm">
-                            <a href={auth.login.url}>{auth.login.title}</a>
-                        </Button>
-                        <Button asChild size="sm">
-                            <a href={auth.signup.url}>{auth.signup.title}</a>
-                        </Button>
+                    <div className="flex items-center gap-20">
+                        <div className="flex items-center gap-2">
+                            <Button asChild variant="outline" size="sm">
+                                <a href={auth.login.url}>{auth.login.title}</a>
+                            </Button>
+                            <Button asChild size="sm">
+                                <a href={auth.signup.url}>{auth.signup.title}</a>
+                            </Button>
+                        </div>
                         <ModeToggle />
                     </div>
                 </nav>
@@ -172,7 +188,20 @@ const Navbar1 = ({
                     <div className="flex items-center justify-between">
                         {/* Logo */}
                         <a href={logo.url} className="flex items-center gap-2">
-                            <img src={logo.src} className="max-h-8" alt={logo.alt} />
+                            <div className="relative w-8 h-8">
+                                <Image
+                                    src="/logo-light.svg"
+                                    alt="QuoteFlow Logo Claro"
+                                    fill
+                                    className="block dark:hidden object-contain"
+                                />
+                                <Image
+                                    src="/logo-dark.svg"
+                                    alt="QuoteFlow Logo Oscuro"
+                                    fill
+                                    className="hidden dark:block object-contain"
+                                />
+                            </div>
                         </a>
 
                         <div className="flex items-center gap-2">
@@ -189,7 +218,20 @@ const Navbar1 = ({
                                     <SheetHeader>
                                         <SheetTitle>
                                             <a href={logo.url} className="flex items-center gap-2">
-                                                <img src={logo.src} className="max-h-8" alt={logo.alt} />
+                                                <div className="relative w-8 h-8">
+                                                    <Image
+                                                        src="/logo-light.svg"
+                                                        alt="QuoteFlow Logo Claro"
+                                                        fill
+                                                        className="block dark:hidden object-contain"
+                                                    />
+                                                    <Image
+                                                        src="/logo-dark.svg"
+                                                        alt="QuoteFlow Logo Oscuro"
+                                                        fill
+                                                        className="hidden dark:block object-contain"
+                                                    />
+                                                </div>
                                             </a>
                                         </SheetTitle>
                                     </SheetHeader>

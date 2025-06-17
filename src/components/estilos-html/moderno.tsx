@@ -12,7 +12,7 @@ export function EstiloModernoHTML({ formData }: { formData: any }) {
 
   return (
     <div className="bg-white rounded-md shadow text-black text-sm font-sans">
-      <div className="bg-neutral-600 h-14 w-full rounded-t flex items-center justify-center">
+      <div className="bg-neutral-800 h-14 w-full rounded-t flex items-center justify-center">
         <h1 className="text-white font-bold text-2xl tracking-wide">Factura</h1>
       </div>
 
