@@ -1,47 +1,52 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowUpRight, CirclePlay } from "lucide-react";
+import { ArrowUpRight, PuzzleIcon, Shapes } from "lucide-react";
+import Link from "next/link";
+import { Button } from "../ui/button";
 import { BackgroundPattern } from "./background-pattern";
-import React from "react";
-import LogoCloud from "@/components/home/logo-cloud";
+import { Badge } from "../ui/badge";
 
-const Hero = () => {
+export const Hero = () => {
   return (
-    <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center py-20 px-6">
-      <div className="md:mt-6 flex items-center justify-center">
-        <div className="text-center max-w-2xl">
-          <Badge className="bg-primary rounded-full py-1 border-none">
-            v1.0.0 is available now! 🚀
+    <div className="flex items-center min-h-screen justify-center px-4 sm:px-6 xl:px-0">
+      <div className="text-center w-full">
+        <Link href="/blocks/categories/pricing">
+          <Badge className="rounded-full py-0.5">
+            Pricing blocks are available now! 🚀
+            <ArrowUpRight className="ml-2 h-4 w-4" />
           </Badge>
-          <h1 className="mt-6 text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold !leading-[1.2] tracking-tight">
-            Customized Shadcn UI Blocks & Components
-          </h1>
-          <p className="mt-6 xs:text-lg">
-            Explore a collection of Shadcn UI blocks and components, ready to
-            preview and copy. Streamline your development workflow with
-            easy-to-implement examples.
-          </p>
-          <div className="mt-12 flex flex-col sm:flex-row items-center sm:justify-center gap-4">
-            <Button
-              size="lg"
-              className="w-full sm:w-auto rounded-full text-base cursor-pointer"
-            >
-              Get Started <ArrowUpRight className="!h-5 !w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto rounded-full text-base shadow-none cursor-pointer"
-            >
-              <CirclePlay className="!h-5 !w-5" /> Watch Demo
-            </Button>
-          </div>
+        </Link>
+        <h1 className="relative z-10 mt-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl sm:max-w-[25ch] mx-auto font-bold tracking-tight leading-[1.2] lg:leading-[1.2]">
+          Effortless Shadcn UI Component Previews & Code Snippets
+        </h1>
+        <p className="mt-8 text-base sm:text-lg lg:text-xl sm:max-w-4xl mx-auto">
+          Explore a collection of Shadcn UI blocks and components, ready to
+          preview and copy. Streamline your development workflow with
+          easy-to-implement examples.
+        </p>
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 px-6 sm:px-0">
+          <Button
+            size="lg"
+            className="group h-12 text-base z-10 rounded-md w-full md:w-auto gap-3"
+            asChild
+          >
+            <Link href="/tool">
+              Get Started <ArrowUpRight className="!h-5 !w-5 group-hover:-rotate-12 transition-transform" />
+            </Link>
+          </Button>
+          <Button
+            size="lg"
+            className="group h-12 text-base z-10 rounded-md w-full md:w-auto gap-3"
+            variant="outline"
+            asChild
+          >
+            <Link href="/components/accordion">
+              View components
+              <PuzzleIcon className="!h-5 !w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
         </div>
       </div>
-      <LogoCloud className="mt-24 max-w-3xl mx-auto" />
+
       <BackgroundPattern />
     </div>
   );
 };
-
-export default Hero;

@@ -26,23 +26,23 @@ export default function Home() {
   });
 
   return (
-    <main className="min-h-screen bg-muted text-foreground">
+    <main className="min-h-screen text-foreground">
       {isMobile ? (
         <div className="flex flex-col gap-6">
           <div className='p-20'>
             <FormularioPresupuesto formData={formData} setFormData={setFormData} />
           </div>
-          <div className='bg-neutral-500/50 p-20'>
+          <div className='p-20'>
             <VistaPrevia formData={formData} setFormData={setFormData} />
           </div>
         </div>
       ) : (
-        <PanelGroup direction="horizontal">
+        <PanelGroup direction="horizontal" className='p-10 px-20'>
           <Panel defaultSize={50} minSize={30} className='p-10'>
             <FormularioPresupuesto formData={formData} setFormData={setFormData} />
           </Panel>
-          <PanelResizeHandle className="w-5 relative group cursor-col-resize transition-colors hover:bg-muted/40" />
-          <Panel defaultSize={50} minSize={30} className='min-h-screen bg-neutral-500/50 p-20'>
+          <PanelResizeHandle className="w-5 relative group cursor-col-resize" />
+          <Panel defaultSize={50} minSize={30} className='min-h-screen p-20'>
             <VistaPrevia formData={formData} setFormData={setFormData} />
           </Panel>
         </PanelGroup >

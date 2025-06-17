@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider"
-import { Navbar1 } from "@/components/nav-bar";
+import { Navbar } from "@/components/navbar/nav-bar";
 import Footer  from "@/components/footer";
 import "./globals.css";
 
@@ -35,7 +35,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar1 />
+          <Navbar />
           {children}
           <Footer />
         </ThemeProvider>
