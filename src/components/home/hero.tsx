@@ -28,7 +28,7 @@ export const Hero = () => {
             className="group h-12 text-base z-10 rounded-md w-full md:w-auto gap-3"
             asChild
           >
-            <Link href="/tool">
+            <Link href="/dashboard">
               Get Started <ArrowUpRight className="!h-5 !w-5 group-hover:-rotate-12 transition-transform" />
             </Link>
           </Button>
