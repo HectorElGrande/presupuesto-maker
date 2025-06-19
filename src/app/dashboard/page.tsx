@@ -9,7 +9,7 @@ import Image from "next/image";
 import { ThemeProvider } from "@/components/theme-provider";
 import { VistaPrevia } from "@/components/vista-previa";
 import { useState } from "react";
-import TablaConceptos from "@/components/tabla-conceptos";
+// import TablaConceptos from "@/components/tabla-conceptos"; // Esto probablemente ya no lo necesites si DataTable lo reemplaza
 import { IconTrendingUp } from "@tabler/icons-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,39 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Footer from "@/components/footer";
-import { DataTable } from "@/components/tool/data-table";
+// Importamos DataTable y el schema de los conceptos si lo necesitamos en otros sitios
+import { DataTable, schema } from "@/components/tool/data-table";
+
+// Define el tipo de DatosFiscales para consistencia
+interface DatosFiscales {
+  nombre: string;
+  nif: string;
+  direccion: string;
+  cp: string; // Asegúrate de que este es el campo correcto, no 'codigoPostal'
+  ciudad: string;
+  provincia: string;
+  pais: string;
+  telefono: string;
+  email: string;
+}
+
+// Define el tipo completo de formData
+interface FormData {
+    numeroPresupuesto: string;
+    fechaEmision: string;
+    fechaVencimiento: string;
+    emisor: DatosFiscales;
+    cliente: DatosFiscales;
+    conceptos: z.infer<typeof schema>[];
+    iva: number;
+    irpf: number;
+    observaciones: string;
+    estilo: string;
+    logo: string;
+    mostrarLogo: boolean;
+    tamanoLogo: string;
+}
+
 
 const logo = {
   url: "/",
@@ -32,7 +64,7 @@ const logo = {
 };
 
 export default function Page() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({ // Usamos el tipo FormData
     numeroPresupuesto: "",
     fechaEmision: "",
     fechaVencimiento: "",
@@ -40,7 +72,8 @@ export default function Page() {
       nombre: "",
       nif: "",
       direccion: "",
-      codigoPostal: "",
+      // Importante: Asegúrate de que los nombres de las propiedades coinciden con DatosFiscales
+      cp: "", // Usar 'cp' en lugar de 'codigoPostal'
       ciudad: "",
       provincia: "",
       pais: "",
@@ -51,14 +84,15 @@ export default function Page() {
       nombre: "",
       nif: "",
       direccion: "",
-      codigoPostal: "",
+      // Importante: Asegúrate de que los nombres de las propiedades coinciden con DatosFiscales
+      cp: "", // Usar 'cp' en lugar de 'codigoPostal'
       ciudad: "",
       provincia: "",
       pais: "",
       telefono: "",
       email: "",
     },
-    conceptos: [{ descripcion: "", cantidad: 0, precio: 0 }],
+    conceptos: [], // Deja vacío para empezar o con datos de ejemplo
     iva: 21,
     irpf: 7,
     observaciones: "",
@@ -67,6 +101,17 @@ export default function Page() {
     mostrarLogo: true,
     tamanoLogo: "S",
   });
+
+  // La función handleConceptsChange ya no es necesaria aquí porque DataTable gestiona formData directamente.
+  // Pero la mantenemos como un comentario por si la necesitas para depurar o en otra parte.
+  /*
+  const handleConceptsChange = (newConcepts: z.infer<typeof schema>[]) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      conceptos: newConcepts,
+    }));
+  };
+  */
 
   return (
     <ThemeProvider
@@ -94,7 +139,7 @@ export default function Page() {
                     <CardHeader>
                       <CardDescription>
                         <a href={logo.url} className="flex items-center gap-2">
-                          <div className="relative w-8 h-8">
+                          <div className="relative h-8 w-8">
                             <Image
                               src="/logo-light.svg"
                               alt="QuoteFlow Logo Claro"
@@ -114,8 +159,8 @@ export default function Page() {
                         </a>
                       </CardDescription>
                       <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        Previsualización factura
-                      </CardTitle>
+                        Previsualización presupuesto
+                      </CardTitle> {/* Título actualizado a 'presupuesto' */}
                       <CardAction>
                         <Badge variant="outline">
                           <IconTrendingUp />
@@ -123,11 +168,15 @@ export default function Page() {
                         </Badge>
                       </CardAction>
                     </CardHeader>
-                    <CardFooter className="flex flex-col md:flex-row items-start  gap-10 text-sm">
-                      <div className="w-full md:w-1/2 px-4 lg:px-6">
-                        <DataTable data={[]}/>
+                    <CardFooter className="flex flex-col md:flex-row items-start gap-10 text-sm">
+                      <div className="w-full md:w-1/2 overflow-x-auto">
+                        {/* CAMBIO CLAVE: Pasar formData y setFormData directamente a DataTable */}
+                        <DataTable
+                          formData={formData}
+                          setFormData={setFormData}
+                        />
                       </div>
-                      <div className="w-full md:w-1/2 flex justify-center px-4">
+                      <div className="w-full md:w-1/2 flex justify-center flex-grow">
                         <VistaPrevia
                           formData={formData}
                           setFormData={setFormData}

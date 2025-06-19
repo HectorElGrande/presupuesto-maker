@@ -26,13 +26,12 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconCircleCheckFilled,
   IconDotsVertical,
   IconGripVertical,
   IconLayoutColumns,
-  IconLoader,
   IconPlus,
   IconTrendingUp,
+  IconTrash,
 } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -54,7 +53,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ChartConfig,
@@ -65,7 +63,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -100,21 +97,54 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"; // Importar Card components
 
+// Nuevo import del componente de formulario de datos fiscales
+import { DatosFiscalesForm } from "@/components/tool/datos-fiscales-form";
+
+// Define el tipo de DatosFiscales para consistencia (copia de datos-fiscales-form.tsx)
+interface DatosFiscales {
+  nombre: string;
+  nif: string;
+  direccion: string;
+  cp: string;
+  ciudad: string;
+  provincia: string;
+  pais: string;
+  telefono: string;
+  email: string;
+}
+
+// Define el esquema de tus conceptos para la tabla
 export const schema = z.object({
   id: z.number(),
-  header: z.string(),
-  type: z.string(),
-  status: z.string(),
-  target: z.string(),
-  limit: z.string(),
-  reviewer: z.string(),
+  descripcion: z.string(),
+  cantidad: z.number(),
+  precio: z.number(),
 });
 
-// Create a separate component for the drag handle
+// Define el tipo completo de formData
+interface FormData {
+  numeroPresupuesto: string;
+  fechaEmision: string;
+  fechaVencimiento: string;
+  emisor: DatosFiscales;
+  cliente: DatosFiscales;
+  conceptos: z.infer<typeof schema>[];
+  iva: number;
+  irpf: number;
+  observaciones: string;
+  estilo: string;
+  logo: string;
+  mostrarLogo: boolean;
+  tamanoLogo: string;
+}
+
+// --- Componente DragHandle con estilos de cursor ---
 function DragHandle({ id }: { id: number }) {
-  const { attributes, listeners } = useSortable({
-    id,
+  const { attributes, listeners, isDragging } = useSortable({
+    id: id.toString(),
   });
 
   return (
@@ -123,19 +153,23 @@ function DragHandle({ id }: { id: number }) {
       {...listeners}
       variant="ghost"
       size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
+      className={`text-muted-foreground size-7 hover:bg-transparent ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
     >
-      <IconGripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
+      <IconGripVertical className="size-3 text-muted-foreground" />
+      <span className="sr-only">Arrastrar para reordenar</span>
     </Button>
   );
 }
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+// --- Definiciones de Columnas actualizadas ---
+const getColumns = (
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>,
+): ColumnDef<z.infer<typeof schema>>[] => [
   {
     id: "drag",
     header: () => null,
     cell: ({ row }) => <DragHandle id={row.original.id} />,
+    enableHiding: false,
   },
   {
     id: "select",
@@ -147,7 +181,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
             (table.getIsSomePageRowsSelected() && "indeterminate")
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label="Seleccionar todo"
+          className="cursor-pointer"
         />
       </div>
     ),
@@ -156,7 +191,8 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label="Seleccionar fila"
+          className="cursor-pointer"
         />
       </div>
     ),
@@ -164,149 +200,91 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "header",
-    header: "Header",
-    cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />;
+    accessorKey: "descripcion",
+    header: "Descripción",
+    cell: ({ row, table }) => {
+      const updateRow = (table.options.meta as any)?.updateRow;
+      return (
+        <TableCellViewer
+          item={row.original}
+          onUpdate={(updatedItem) => updateRow(row.original.id, updatedItem)}
+        />
+      );
     },
     enableHiding: false,
   },
   {
-    accessorKey: "type",
-    header: "Section Type",
-    cell: ({ row }) => (
-      <div className="w-32">
-        <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.type}
-        </Badge>
-      </div>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="text-muted-foreground px-1.5">
-        {row.original.status === "Done" ? (
-          <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-        ) : (
-          <IconLoader />
-        )}
-        {row.original.status}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "target",
-    header: () => <div className="w-full text-right">Target</div>,
-    cell: ({ row }) => (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
-          });
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-target`} className="sr-only">
-          Target
-        </Label>
-        <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-          defaultValue={row.original.target}
-          id={`${row.original.id}-target`}
-        />
-      </form>
-    ),
-  },
-  {
-    accessorKey: "limit",
-    header: () => <div className="w-full text-right">Limit</div>,
-    cell: ({ row }) => (
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          toast.promise(new Promise((resolve) => setTimeout(resolve, 1000)), {
-            loading: `Saving ${row.original.header}`,
-            success: "Done",
-            error: "Error",
-          });
-        }}
-      >
-        <Label htmlFor={`${row.original.id}-limit`} className="sr-only">
-          Limit
-        </Label>
-        <Input
-          className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-          defaultValue={row.original.limit}
-          id={`${row.original.id}-limit`}
-        />
-      </form>
-    ),
-  },
-  {
-    accessorKey: "reviewer",
-    header: "Reviewer",
+    accessorKey: "cantidad",
+    header: () => <div className="w-full text-right">Cantidad</div>,
     cell: ({ row }) => {
-      const isAssigned = row.original.reviewer !== "Assign reviewer";
-
-      if (isAssigned) {
-        return row.original.reviewer;
-      }
-
-      return (
-        <>
-          <Label htmlFor={`${row.original.id}-reviewer`} className="sr-only">
-            Reviewer
-          </Label>
-          <Select>
-            <SelectTrigger
-              className="w-38 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate"
-              size="sm"
-              id={`${row.original.id}-reviewer`}
-            >
-              <SelectValue placeholder="Assign reviewer" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-              <SelectItem value="Jamik Tashpulatov">
-                Jamik Tashpulatov
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </>
-      );
+      return <div className="text-right">{row.original.cantidad}</div>;
     },
   },
   {
+    accessorKey: "precio",
+    header: () => <div className="w-full text-right">Precio</div>,
+    cell: ({ row }) => {
+      return <div className="text-right">{row.original.precio.toFixed(2)} €</div>;
+    },
+  },
+  {
+    id: "total",
+    header: () => <div className="w-full text-right">Total</div>,
+    cell: ({ row }) => {
+      const total = row.original.cantidad * row.original.precio;
+      return <div className="font-medium text-right">{total.toFixed(2)} €</div>;
+    },
+    enableHiding: true,
+  },
+  {
     id: "actions",
-    cell: () => (
+    cell: ({ row, table }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
-            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+            className="data-[state=open]:bg-muted text-muted-foreground flex size-8 cursor-pointer"
             size="icon"
           >
             <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
+            <span className="sr-only">Abrir menú</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              const newRow = {
+                ...row.original,
+                id: Math.max(0, ...(table.options.data as z.infer<typeof schema>[]).map((d) => d.id)) + 1,
+              };
+              (table.options.meta as any)?.addRow(newRow);
+              toast.success(`Copia de "${newRow.descripcion}" añadida.`);
+            }}
+            className="cursor-pointer"
+          >
+            Hacer una copia
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => {
+              (table.options.meta as any)?.removeRow(row.original.id);
+              toast.success(`"${row.original.descripcion}" eliminada.`);
+            }}
+            className="cursor-pointer"
+          >
+            Eliminar
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
   },
 ];
 
+// --- DraggableRow Component ---
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
+    id: row.original.id.toString(),
   });
 
   return (
@@ -329,15 +307,20 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   );
 }
 
+// --- DataTable Component ---
 export function DataTable({
-  data: initialData,
+  formData,
+  setFormData,
 }: {
-  data: z.infer<typeof schema>[];
+  formData: FormData;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
 }) {
-  const [data, setData] = React.useState(() => initialData);
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = React.useState("emisor"); // Estado para la pestaña activa, por defecto "emisor"
+
+  const conceptos = formData.conceptos;
+
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
@@ -350,16 +333,46 @@ export function DataTable({
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
     useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {})
+    useSensor(KeyboardSensor, {}),
   );
 
   const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
-    [data]
+    () => conceptos?.map(({ id }) => id.toString()) || [],
+    [conceptos],
   );
 
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({
+      descripcion: true,
+      cantidad: true,
+      precio: true,
+      total: true,
+      actions: true,
+      drag: true,
+      select: true,
+    });
+
+  // Efecto para ocultar/mostrar columnas basado en si es móvil.
+  React.useEffect(() => {
+    if (isMobile) {
+      setColumnVisibility((prev) => ({
+        ...prev,
+        total: false,
+      }));
+    } else {
+      setColumnVisibility((prev) => ({
+        ...prev,
+        cantidad: true,
+        precio: true,
+        total: true,
+      }));
+    }
+  }, [isMobile]);
+
+  const columns = React.useMemo(() => getColumns(setFormData), [setFormData]);
+
   const table = useReactTable({
-    data,
+    data: conceptos,
     columns,
     state: {
       sorting,
@@ -381,110 +394,219 @@ export function DataTable({
     getSortedRowModel: getSortedRowModel(),
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
+    columnResizeMode: "onChange",
+    meta: {
+      addRow: (newRow: z.infer<typeof schema>) => {
+        setFormData((prev) => ({
+          ...prev,
+          conceptos: [...prev.conceptos, newRow],
+        }));
+      },
+      removeRow: (id: UniqueIdentifier) => {
+        setFormData((prev) => ({
+          ...prev,
+          conceptos: prev.conceptos.filter((d) => d.id !== id),
+        }));
+      },
+      updateRow: (id: UniqueIdentifier, updatedFields: Partial<z.infer<typeof schema>>, showToast: boolean = true) => {
+        setFormData((prev) => {
+          const newConceptos = prev.conceptos.map(row => row.id === id ? { ...row, ...updatedFields } : row);
+          if (showToast) {
+            toast.success("Concepto actualizado.");
+          }
+          return { ...prev, conceptos: newConceptos };
+        });
+      },
+      removeSelectedRows: (selectedRowIds: UniqueIdentifier[]) => {
+        setFormData((prev) => {
+          const newConceptos = prev.conceptos.filter(row => !selectedRowIds.includes(row.id));
+          setRowSelection({});
+          toast.success(`${selectedRowIds.length} concepto(s) eliminado(s).`);
+          return { ...prev, conceptos: newConceptos };
+        });
+      }
+    }
   });
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (active && over && active.id !== over.id) {
-      setData((data) => {
+      setFormData((prev) => {
         const oldIndex = dataIds.indexOf(active.id);
         const newIndex = dataIds.indexOf(over.id);
-        return arrayMove(data, oldIndex, newIndex);
+        const newConceptos = arrayMove(prev.conceptos, oldIndex, newIndex);
+        return { ...prev, conceptos: newConceptos };
       });
     }
   }
 
   function addNewRow() {
-    const maxId = Math.max(0, ...data.map((d) => d.id));
+    const maxId = Math.max(0, ...conceptos.map((d) => d.id));
     const newRow = {
       id: maxId + 1,
-      header: "New Section",
-      type: "Executive Summary",
-      status: "Not Started",
-      target: "0",
-      limit: "0",
-      reviewer: "Assign reviewer",
+      descripcion: "Nuevo Concepto",
+      cantidad: 0,
+      precio: 0,
     };
-    setData((prev) => [...prev, newRow]);
+    setFormData((prev) => ({
+      ...prev,
+      conceptos: [...prev.conceptos, newRow],
+    }));
   }
+
+  const selectedRowIds = table.getFilteredSelectedRowModel().rows.map(row => row.original.id);
+  const canDeleteSelected = selectedRowIds.length > 0;
+
+  // Handler genérico para actualizar campos directamente en formData
+  const handleFormDataChange = (field: keyof FormData, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handler para actualizar datos anidados (emisor, cliente)
+  const handleNestedFormDataChange = (
+    parentField: "emisor" | "cliente",
+    updatedDatos: DatosFiscales
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [parentField]: updatedDatos,
+    }));
+  };
+
+  const showConceptButtons = activeTab === "conceptos"; // Controla la visibilidad de los botones
 
   return (
     <Tabs
-      defaultValue="outline"
-      className="w-full flex-col justify-start gap-6"
+      defaultValue="emisor" // Pestaña inicial: Emisor
+      className="flex w-full flex-col justify-start gap-6"
+      onValueChange={setActiveTab} // Actualiza el estado de la pestaña activa
     >
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
-          </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
-        </TabsList>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <IconChevronDown />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="sm" onClick={addNewRow}>
-            <IconPlus />
-            <span className="hidden lg:inline">Add Section</span>
-          </Button>
+      <div className="flex flex-col items-start gap-2 px-4 md:flex-row md:flex-wrap md:justify-between md:items-center lg:px-6">
+        <div className="flex w-full items-center justify-between md:w-auto md:justify-start">
+          <Label htmlFor="view-selector" className="sr-only">
+            Vista
+          </Label>
+          <Select value={activeTab} onValueChange={setActiveTab}> {/* Controla el Select con el estado */}
+            <SelectTrigger
+              className="flex w-fit cursor-pointer lg:hidden"
+              size="sm"
+              id="view-selector"
+            >
+              <SelectValue placeholder="Seleccionar vista" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="emisor">Datos Emisor</SelectItem>
+              <SelectItem value="cliente">Datos Cliente</SelectItem>
+              <SelectItem value="conceptos">Conceptos</SelectItem>
+              <SelectItem value="documento">Detalles Documento</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Nuevas pestañas para desktop */}
+          <TabsList className="**\:data-[slot=badge]:bg-muted-foreground/30 **\:data-[slot=badge]:size-5 **\:data-[slot=badge]:rounded-full **\:data-[slot=badge]:px-1 hidden lg:flex flex-wrap">
+            <TabsTrigger value="emisor" className="cursor-pointer">Datos Emisor</TabsTrigger>
+            <TabsTrigger value="cliente" className="cursor-pointer">Datos Cliente</TabsTrigger>
+            <TabsTrigger value="conceptos" className="cursor-pointer">Conceptos</TabsTrigger>
+            <TabsTrigger value="documento" className="cursor-pointer">Detalles Documento</TabsTrigger>
+          </TabsList>
         </div>
+
+        {/* Botones condicionales */}
+        {showConceptButtons && (
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 mt-2 md:w-auto md:mt-0">
+            {canDeleteSelected && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => (table.options.meta as any)?.removeSelectedRows(selectedRowIds)}
+                className="cursor-pointer border-red-300 text-red-500 hover:border-red-400 hover:text-red-600"
+              >
+                <IconTrash className="size-4" />
+                <span className="hidden lg:inline">Eliminar seleccionados ({selectedRowIds.length})</span>
+                <span className="inline lg:hidden">({selectedRowIds.length})</span>
+              </Button>
+            )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="cursor-pointer">
+                  <IconLayoutColumns />
+                  <span className="hidden lg:inline">Personalizar Columnas</span>
+                  <span className="sr-only lg:hidden">Columnas</span>
+                  <IconChevronDown className="ml-1 hidden lg:inline" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                {table
+                  .getAllColumns()
+                  .filter(
+                    (column) =>
+                      column.id !== "drag" && column.id !== "select" && column.getCanHide(),
+                  )
+                  .map((column) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="capitalize cursor-pointer"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) =>
+                          column.toggleVisibility(!!value)
+                        }
+                      >
+                        {column.id}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button variant="outline" size="sm" onClick={addNewRow} className="cursor-pointer">
+              <IconPlus />
+              <span className="hidden lg:inline">Añadir Concepto</span>
+              <span className="sr-only lg:hidden">Añadir</span>
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* TAB: Datos Emisor */}
+      <TabsContent value="emisor" className="flex flex-col gap-6 px-4 lg:px-6">
+        <Card className="shadow-md">
+            <CardHeader>
+                <CardTitle className="text-xl">Información del Emisor</CardTitle>
+                <CardDescription>Completa los datos fiscales de la entidad emisora del presupuesto.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DatosFiscalesForm
+                    tipo="emisor"
+                    datos={formData.emisor}
+                    onUpdate={(updatedDatos) => handleNestedFormDataChange("emisor", updatedDatos)}
+                />
+            </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* TAB: Datos Cliente */}
+      <TabsContent value="cliente" className="flex flex-col gap-6 px-4 lg:px-6">
+        <Card className="shadow-md">
+            <CardHeader>
+                <CardTitle className="text-xl">Información del Cliente</CardTitle>
+                <CardDescription>Introduce los datos fiscales de tu cliente.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <DatosFiscalesForm
+                    tipo="cliente"
+                    datos={formData.cliente}
+                    onUpdate={(updatedDatos) => handleNestedFormDataChange("cliente", updatedDatos)}
+                />
+            </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* TAB: Conceptos */}
       <TabsContent
-        value="outline"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+        value="conceptos"
+        className="relative flex flex-col gap-4 px-4 lg:px-6"
       >
         <div className="overflow-hidden rounded-lg border">
           <DndContext
@@ -494,18 +616,22 @@ export function DataTable({
             sensors={sensors}
             id={sortableId}
           >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
+            <Table className="w-full table-fixed">
+              <TableHeader className="sticky top-0 z-10 bg-muted">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
                     {headerGroup.headers.map((header) => {
                       return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
+                        <TableHead
+                          key={header.id}
+                          colSpan={header.colSpan}
+                          style={{ width: header.getSize() }}
+                        >
                           {header.isPlaceholder
                             ? null
                             : flexRender(
                                 header.column.columnDef.header,
-                                header.getContext()
+                                header.getContext(),
                               )}
                         </TableHead>
                       );
@@ -513,7 +639,7 @@ export function DataTable({
                   </TableRow>
                 ))}
               </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
+              <TableBody className="**\:data-[slot=table-cell]:first:w-8">
                 {table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
@@ -529,7 +655,7 @@ export function DataTable({
                       colSpan={columns.length}
                       className="h-24 text-center"
                     >
-                      No results.
+                      No hay resultados. Añade un concepto para empezar.
                     </TableCell>
                   </TableRow>
                 )}
@@ -537,15 +663,16 @@ export function DataTable({
             </Table>
           </DndContext>
         </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+
+        <div className="flex flex-col items-center gap-2 px-4 text-center md:flex-row md:justify-between md:text-left">
+          <div className="text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} de{" "}
+            {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
           </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
+          <div className="flex w-full flex-wrap items-center justify-center gap-4 md:w-auto md:justify-end">
+            <div className="hidden items-center gap-2 sm:flex">
               <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
+                Filas por página
               </Label>
               <Select
                 value={`${table.getState().pagination.pageSize}`}
@@ -553,10 +680,8 @@ export function DataTable({
                   table.setPageSize(Number(value));
                 }}
               >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
+                <SelectTrigger size="sm" className="w-20 cursor-pointer" id="rows-per-page">
+                  <SelectValue placeholder={table.getState().pagination.pageSize} />
                 </SelectTrigger>
                 <SelectContent side="top">
                   {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -567,108 +692,224 @@ export function DataTable({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
+            <div className="text-sm font-medium">
+              Página {table.getState().pagination.pageIndex + 1} de{" "}
               {table.getPageCount()}
             </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
+                className="hidden h-8 w-8 p-0 sm:flex cursor-pointer"
                 onClick={() => table.setPageIndex(0)}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className="sr-only">Go to first page</span>
+                <span className="sr-only">Ir a la primera página</span>
                 <IconChevronsLeft />
               </Button>
               <Button
                 variant="outline"
-                className="size-8"
+                className="size-8 cursor-pointer"
                 size="icon"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span className="sr-only">Go to previous page</span>
+                <span className="sr-only">Ir a la página anterior</span>
                 <IconChevronLeft />
               </Button>
               <Button
                 variant="outline"
-                className="size-8"
+                className="size-8 cursor-pointer"
                 size="icon"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
               >
-                <span className="sr-only">Go to next page</span>
+                <span className="sr-only">Ir a la página siguiente</span>
                 <IconChevronRight />
               </Button>
               <Button
                 variant="outline"
-                className="hidden size-8 lg:flex"
+                className="hidden size-8 sm:flex cursor-pointer"
                 size="icon"
                 onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                 disabled={!table.getCanNextPage()}
               >
-                <span className="sr-only">Go to last page</span>
+                <span className="sr-only">Ir a la última página</span>
                 <IconChevronsRight />
               </Button>
             </div>
           </div>
         </div>
       </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+
+      {/* TAB: Detalles del Documento (nueva) */}
+      <TabsContent value="documento" className="flex flex-col gap-6 px-4 lg:px-6">
+        <Card className="shadow-md">
+            <CardHeader>
+                <CardTitle className="text-xl">Información del Presupuesto</CardTitle>
+                <CardDescription>Define las fechas, número y condiciones de tu presupuesto.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="fechaEmision">Fecha de emisión</Label>
+                    <Input
+                    id="fechaEmision"
+                    type="date"
+                    value={formData.fechaEmision || ""}
+                    onChange={(e) => handleFormDataChange("fechaEmision", e.target.value)}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="fechaVencimiento">Fecha de vencimiento</Label>
+                    <Input
+                    id="fechaVencimiento"
+                    type="date"
+                    value={formData.fechaVencimiento || ""}
+                    onChange={(e) => handleFormDataChange("fechaVencimiento", e.target.value)}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="numeroPresupuesto">Número de Presupuesto</Label>
+                    <Input
+                    id="numeroPresupuesto"
+                    placeholder="Num. Presupuesto"
+                    value={formData.numeroPresupuesto || ""}
+                    onChange={(e) => handleFormDataChange("numeroPresupuesto", e.target.value)}
+                    />
+                </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="iva">IVA</Label>
+                    <Select
+                    onValueChange={(value) => handleFormDataChange("iva", parseFloat(value))}
+                    value={formData.iva?.toString() || ""}
+                    >
+                    <SelectTrigger className="cursor-pointer" id="iva">
+                        <SelectValue placeholder="Selecciona IVA" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="21">21%</SelectItem>
+                        <SelectItem value="10">10%</SelectItem>
+                        <SelectItem value="0">Exento</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="irpf">IRPF</Label>
+                    <Select
+                    onValueChange={(value) => handleFormDataChange("irpf", parseFloat(value))}
+                    value={formData.irpf?.toString() || ""}
+                    >
+                    <SelectTrigger className="cursor-pointer" id="irpf">
+                        <SelectValue placeholder="Selecciona IRPF" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="0">0%</SelectItem>
+                        <SelectItem value="7">7%</SelectItem>
+                        <SelectItem value="15">15%</SelectItem>
+                        <SelectItem value="19">19%</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                <Label htmlFor="observaciones">Notas y forma de pago</Label>
+                <Textarea
+                    id="observaciones"
+                    value={formData.observaciones || ""}
+                    onChange={(e) => handleFormDataChange("observaciones", e.target.value)}
+                    placeholder="Ej: Pago mediante transferencia en 15 días. IBAN: ES00 0000 0000 0000"
+                />
+                </div>
+            </CardContent>
+        </Card>
       </TabsContent>
     </Tabs>
   );
 }
 
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig;
-
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+// TableCellViewer se mantiene igual
+function TableCellViewer({ item, onUpdate }: { item: z.infer<typeof schema>, onUpdate: (updatedItem: Partial<z.infer<typeof schema>>) => void }) {
   const isMobile = useIsMobile();
+  const [open, setOpen] = React.useState(false);
+
+  const [localItem, setLocalItem] = React.useState(item);
+
+  React.useEffect(() => {
+    setLocalItem(item);
+  }, [item]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setLocalItem((prev) => ({
+      ...prev,
+      [id.replace('drawer-', '')]: (id === 'drawer-cantidad' || id === 'drawer-precio') ? Number(value) : value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const updatePromise = new Promise((resolve) => {
+      setTimeout(() => {
+        onUpdate(localItem);
+        resolve("Cambios guardados.");
+      }, 500);
+    });
+
+    toast.promise(updatePromise, {
+      loading: `Guardando cambios para ${localItem.descripcion}`,
+      success: (data) => {
+        setOpen(false);
+        return data;
+      },
+      error: "Error al guardar cambios.",
+    });
+  };
+
+  const chartData = [
+    { month: "January", desktop: 186, mobile: 80 },
+    { month: "February", desktop: 305, mobile: 200 },
+    { month: "March", desktop: 237, mobile: 120 },
+    { month: "April", desktop: 73, mobile: 190 },
+    { month: "May", desktop: 209, mobile: 130 },
+    { month: "June", desktop: 214, mobile: 140 },
+  ];
+
+  const chartConfig = {
+    desktop: {
+      label: "Desktop",
+      color: "var(--primary)",
+    },
+    mobile: {
+      label: "Mobile",
+      color: "var(--primary)",
+    },
+  } satisfies ChartConfig;
+
 
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
+    <Drawer direction={isMobile ? "bottom" : "right"} open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.header}
+        <Button variant="link" className="w-fit cursor-pointer px-0 text-left text-foreground">
+          {item.descripcion}
         </Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.header}</DrawerTitle>
+          <DrawerTitle>{item.descripcion}</DrawerTitle>
           <DrawerDescription>
-            Showing total visitors for the last 6 months
+            Detalles del Concepto
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
@@ -716,98 +957,58 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
               </ChartContainer>
               <Separator />
               <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
+                <div className="flex gap-2 font-medium leading-none">
+                  Información adicional del concepto{" "}
                   <IconTrendingUp className="size-4" />
                 </div>
                 <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
+                  Aquí puedes añadir más detalles o un resumen del concepto.
                 </div>
               </div>
               <Separator />
             </>
           )}
-          <form className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-3">
-              <Label htmlFor="header">Header</Label>
-              <Input id="header" defaultValue={item.header} />
+              <Label htmlFor="drawer-descripcion">Descripción</Label>
+              <Input
+                id="drawer-descripcion"
+                value={localItem.descripcion}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
-                <Label htmlFor="type">Type</Label>
-                <Select defaultValue={item.type}>
-                  <SelectTrigger id="type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Table of Contents">
-                      Table of Contents
-                    </SelectItem>
-                    <SelectItem value="Executive Summary">
-                      Executive Summary
-                    </SelectItem>
-                    <SelectItem value="Technical Approach">
-                      Technical Approach
-                    </SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Capabilities">Capabilities</SelectItem>
-                    <SelectItem value="Focus Documents">
-                      Focus Documents
-                    </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Cover Page">Cover Page</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="drawer-cantidad">Cantidad</Label>
+                <Input
+                  type="number"
+                  id="drawer-cantidad"
+                  value={localItem.cantidad}
+                  onChange={handleInputChange}
+                  className="w-full"
+                />
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Status</Label>
-                <Select defaultValue={item.status}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Done">Done</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="target">Target</Label>
-                <Input id="target" defaultValue={item.target} />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="limit">Limit</Label>
-                <Input id="limit" defaultValue={item.limit} />
+                <Label htmlFor="drawer-precio">Precio</Label>
+                <Input
+                  type="number"
+                  id="drawer-precio"
+                  value={localItem.precio}
+                  onChange={handleInputChange}
+                  className="w-full"
+                />
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <Label htmlFor="reviewer">Reviewer</Label>
-              <Select defaultValue={item.reviewer}>
-                <SelectTrigger id="reviewer" className="w-full">
-                  <SelectValue placeholder="Select a reviewer" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                  <SelectItem value="Jamik Tashpulatov">
-                    Jamik Tashpulatov
-                  </SelectItem>
-                  <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
-                </SelectContent>
-              </Select>
+                <Label>Total</Label>
+                <Input value={(localItem.cantidad * localItem.precio).toFixed(2) + ' €'} readOnly />
             </div>
+            <DrawerFooter>
+              <Button type="submit" className="cursor-pointer">Guardar Cambios</Button>
+              <Button variant="outline" className="cursor-pointer" onClick={() => setOpen(false)}>Cerrar</Button>
+            </DrawerFooter>
           </form>
         </div>
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   );
